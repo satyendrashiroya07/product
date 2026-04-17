@@ -7,6 +7,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -19,6 +20,7 @@ import java.security.Key;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
@@ -34,7 +36,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        // 1. Skip if no token
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -43,13 +44,13 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-            // 2. Validate token
             Claims claims = Jwts.parser()
                     .setSigningKey(key)
                     .parseClaimsJws(token)
                     .getBody();
 
             String userId = claims.getSubject();
+            log.info("Extracted User ID: "+userId+" from token");
             List<String> roles = claims.get("roles", List.class);
 
             List<GrantedAuthority> authorities = roles.stream()
@@ -61,17 +62,16 @@ public class JwtFilter extends OncePerRequestFilter {
                             userId, null, authorities);
 
             SecurityContextHolder.getContext().setAuthentication(auth);
-
-            // 3. Attach to request (simple approach)
             request.setAttribute("userId", userId);
             request.setAttribute("roles", roles);
 
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Invalid Token");
+            log.error("token is not valid");
             return;
         }
-
+        log.info("Sending request to filter chain");
         filterChain.doFilter(request, response);
     }
 }
