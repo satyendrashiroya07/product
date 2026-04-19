@@ -43,13 +43,6 @@ public class ProductController {
                 return ResponseEntity.status(404).body(false);
             }
 
-            if (product.getQuantity() < request.getQuantity()) {
-                return ResponseEntity.status(409).body(false);
-            }
-
-            product.setQuantity(product.getQuantity() - request.getQuantity());
-            productRepo.save(product);
-
             return ResponseEntity.ok(true);
         }
         catch(RuntimeException e){
