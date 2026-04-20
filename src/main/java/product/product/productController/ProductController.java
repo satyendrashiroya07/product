@@ -7,6 +7,8 @@ import product.product.exception.ProductNotFoundException;
 import product.product.model.Product;
 import product.product.productService.ProductService;
 import shiroya.orderEvent.OrderEvent;
+import shiroya.orderEvent.OrderRequest;
+import shiroya.productEvent.ProductResponse;
 
 @RestController
 @RequestMapping("/product")
@@ -34,16 +36,18 @@ public class ProductController {
     }
 
     @PostMapping("/validateAndReduce")
-    public ResponseEntity<Boolean> validateAndReduceProduct(@RequestBody OrderEvent request) {
+    public ProductResponse validateAndReduceProduct(@RequestBody OrderRequest request) {
 
         try {
             Product product = productRepo.findByProductId(request.getProductId());
 
-            if (product == null) {
-                return ResponseEntity.status(404).body(false);
-            }
+            ProductResponse response = new ProductResponse();
+            response.setProductId(product.getProductId());
+            response.setName(product.getName());
+            response.setQuantity(product.getQuantity());
+            response.setPrice(product.getPrice());
 
-            return ResponseEntity.ok(true);
+            return response;
         }
         catch(RuntimeException e){
              throw new ProductNotFoundException("Product Not Found");

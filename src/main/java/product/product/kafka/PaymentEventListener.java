@@ -5,6 +5,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import product.product.dto.ProductRepo;
 import product.product.model.Product;
+import shiroya.orderEvent.OrderEvent;
 import shiroya.paymentEvent.PaymentEvent;
 
 import java.util.Objects;
@@ -15,8 +16,8 @@ public class PaymentEventListener {
     @Autowired
     private ProductRepo productRepo;
 
-    @KafkaListener(topics = "payment-success1", groupId = "product-events")
-    public void handleSuccess(PaymentEvent event) {
+    @KafkaListener(topics = "order-confirmed", groupId = "product-events")
+    public void handleSuccess(OrderEvent event) {
 
         String productId = event.getProductId();
 
